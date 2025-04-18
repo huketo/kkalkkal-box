@@ -47,7 +47,7 @@ services:
       retries: 10
       start_period: 30s
 
-  mongo-setup:
+  mongo-init:
     env_file:
       - .env
     image: mongo:6
