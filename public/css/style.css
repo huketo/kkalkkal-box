@@ -1,0 +1,370 @@
+/* 2000년대 초반 감성의 레트로 스타일 CSS */
+
+@import url('https://fonts.googleapis.com/css2?family=Gulim+Che:wght@400&display=swap');
+
+:root {
+  --bg-color: #ece9d8;
+  --window-bg: #ffffff;
+  --window-border: #848484;
+  --window-titlebar: #0055e5;
+  --text-color: #000000;
+  --link-color: #0000ff;
+  --link-visited: #551a8b;
+  --accent-color: #ff6600;
+}
+
+/* 기본 스타일 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: 'Gulim Che', 'Gulim', monospace;
+  font-size: 14px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  background-image: url('/images/wallpaper.gif');
+  background-repeat: repeat;
+}
+
+/* 윈도우 스타일 (Windows 98/XP 느낌) */
+.window-container {
+  width: 90%;
+  max-width: 1024px;
+  margin: 20px auto;
+  border: 3px solid var(--window-border);
+  border-radius: 0;
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.window-titlebar {
+  background-color: var(--window-titlebar);
+  color: #fff;
+  padding: 5px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.window-titlebar-title {
+  font-weight: bold;
+}
+
+.window-titlebar-controls {
+  display: flex;
+}
+
+.window-button {
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
+  border: 1px solid #fff;
+  background-color: var(--window-titlebar);
+  color: #fff;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.window-content {
+  background-color: var(--window-bg);
+  padding: 10px;
+  min-height: 400px;
+}
+
+/* 헤더 스타일 */
+.main-header {
+  padding: 10px;
+  border-bottom: 2px dashed var(--window-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.logo a {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--accent-color);
+  text-decoration: none;
+  letter-spacing: -1px;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.main-nav ul {
+  display: flex;
+  list-style: none;
+}
+
+.main-nav li {
+  margin-left: 10px;
+}
+
+.main-nav a {
+  color: var(--link-color);
+  text-decoration: none;
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+.main-nav a:hover {
+  background-color: #ddd;
+  text-decoration: underline;
+}
+
+/* 메인 콘텐츠 영역 */
+.main-content {
+  padding: 10px;
+  min-height: 300px;
+}
+
+/* 푸터 스타일 */
+.main-footer {
+  padding: 10px;
+  text-align: center;
+  border-top: 2px dashed var(--window-border);
+  margin-top: 20px;
+  color: #666;
+}
+
+.visitor-counter {
+  margin-top: 5px;
+  font-family: monospace;
+}
+
+/* 깜빡이는 효과 */
+.blink {
+  animation: blink-animation 1s steps(2, start) infinite;
+}
+
+@keyframes blink-animation {
+  to {
+    visibility: hidden;
+  }
+}
+
+/* 링크 스타일 */
+a {
+  color: var(--link-color);
+  text-decoration: underline;
+}
+
+a:visited {
+  color: var(--link-visited);
+}
+
+/* 비디오 카드 그리드 스타일 */
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.video-card {
+  border: 1px solid #ccc;
+  padding: 10px;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.video-card:hover {
+  transform: scale(1.03);
+  border-color: var(--accent-color);
+}
+
+.video-thumbnail {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  margin-bottom: 5px;
+  aspect-ratio: 4/3;
+  background-color: #000;
+}
+
+.video-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 14px;
+  height: 2.8em;
+  overflow: hidden;
+}
+
+.video-meta {
+  font-size: 12px;
+  color: #666;
+}
+
+/* 폼 스타일 */
+.retro-form {
+  background-color: #f0f0f0;
+  border: 1px solid #999;
+  padding: 15px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid #999;
+  background-color: #fff;
+  font-family: 'Gulim Che', 'Gulim', monospace;
+}
+
+.form-textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.form-button {
+  background-color: #d4d0c8;
+  border: 2px outset #d4d0c8;
+  padding: 3px 10px;
+  cursor: pointer;
+  font-family: 'Gulim Che', 'Gulim', monospace;
+}
+
+.form-button:active {
+  border-style: inset;
+}
+
+.error-message {
+  color: #ff0000;
+  margin-bottom: 10px;
+  padding: 5px;
+  border: 1px solid #ff0000;
+  background-color: #ffeeee;
+}
+
+/* 비디오 플레이어 스타일 */
+.video-player-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.video-player {
+  max-width: 100%;
+  aspect-ratio: 4/3;
+  background-color: #000;
+  margin-bottom: 10px;
+}
+
+.video-info {
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: #f5f5f5;
+}
+
+.video-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+/* 코멘트 섹션 스타일 */
+.comment-section {
+  margin-top: 20px;
+  border-top: 1px dashed #ccc;
+  padding-top: 10px;
+}
+
+.comment-list {
+  margin-bottom: 15px;
+}
+
+.comment-item {
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+}
+
+.comment-meta {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.comment-content {
+  font-size: 14px;
+}
+
+/* 레트로 버튼 스타일 */
+.retro-button {
+  display: inline-block;
+  background-color: #d4d0c8;
+  border: 2px outset #d4d0c8;
+  padding: 3px 10px;
+  cursor: pointer;
+  text-decoration: none;
+  color: #000;
+  font-family: 'Gulim Che', 'Gulim', monospace;
+}
+
+.retro-button:active {
+  border-style: inset;
+}
+
+/* 검색 섹션 */
+.search-section {
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+}
+
+.search-form {
+  display: flex;
+  gap: 5px;
+}
+
+.search-input {
+  flex-grow: 1;
+  padding: 5px;
+  border: 1px solid #999;
+}
+
+/* 반응형 디자인을 위한 미디어 쿼리 */
+@media (max-width: 768px) {
+  .window-container {
+    width: 95%;
+    margin: 10px auto;
+  }
+
+  .video-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+
+  .main-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .main-nav ul {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .main-nav li {
+    margin: 5px;
+  }
+}

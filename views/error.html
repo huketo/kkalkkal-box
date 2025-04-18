@@ -1,0 +1,14 @@
+{% extends "layouts/main.html" %} {% block content %}
+<div class="error-container">
+  <h1>오류가 발생했습니다!</h1>
+
+  <div class="error-box">
+    <h2>오류코드 - {{ status | default('500') }}</h2>
+    <p>죄송합니다. 요청하신 페이지를 표시할 수 없습니다.</p>
+
+    <div class="error-actions">
+      <a href="/" class="retro-button">홈으로 돌아가기</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

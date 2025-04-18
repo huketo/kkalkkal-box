@@ -1,0 +1,45 @@
+{% extends "layouts/main.html" %} {% block content %}
+<section class="welcome-section">
+  <h1>깔깔상자에 오신 것을 환영합니다!</h1>
+  <p>2000년대 초반 감성의 레트로 비디오 플랫폼입니다.</p>
+  <p>업로드된 모든 영상은 4:3 비율의 저화질로 변환되어 밀레니엄 시대의 향수를 불러일으킵니다.</p>
+
+  <div class="search-section">
+    <form action="/search" method="GET" class="search-form">
+      <input type="text" name="query" class="search-input" placeholder="비디오 검색..." required />
+      <button type="submit" class="form-button">검색</button>
+    </form>
+  </div>
+</section>
+
+{% if videos and videos.length > 0 %}
+<section class="latest-videos">
+  <h2>최신 업로드 비디오</h2>
+  <div class="video-grid">
+    {% for video in videos %}
+    <a href="/video/{{ video.id }}" class="video-card">
+      {% if video.thumbnailPath %}
+      <img src="/api/thumbnail/{{ video.id }}" alt="{{ video.title }}" class="video-thumbnail" />
+      {% else %}
+      <div class="video-thumbnail"></div>
+      {% endif %}
+      <div class="video-title">{{ video.title }}</div>
+      <div class="video-meta">
+        <span>{{ video.user.nickname }}</span> • <span>조회수 {{ video.views }}</span> •
+        <span>{{ video.createdAt | date('YYYY-MM-DD') }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<section class="no-videos">
+  <h2>등록된 비디오가 없습니다.</h2>
+  <p>첫 번째 비디오를 업로드해보세요!</p>
+  {% if user %}
+  <a href="/video/upload" class="retro-button">비디오 업로드</a>
+  {% else %}
+  <a href="/auth/login" class="retro-button">로그인하여 업로드</a>
+  {% endif %}
+</section>
+{% endif %} {% endblock %}

@@ -1,0 +1,7 @@
+<div class="comment-item">
+  <div class="comment-meta">
+    <span class="comment-author">{{ comment.authorName }}</span> •
+    <span class="comment-date">{{ comment.createdAt | date('YYYY-MM-DD HH:mm') }}</span>
+  </div>
+  <div class="comment-content">{{ comment.content }}</div>
+</div>

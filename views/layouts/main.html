@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title }}</title>
+    <script src="/js/htmx.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png" />
+    <link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png" />
+    <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-icon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="msapplication-TileColor" content="#ffffff" />
+    <meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
+    <meta name="theme-color" content="#ffffff" />
+  </head>
+  <body>
+    <div class="window-container">
+      <div class="window-titlebar">
+        <div class="window-titlebar-title">{{ title }}</div>
+        <div class="window-titlebar-controls">
+          <button class="window-button minimize">_</button>
+          <button class="window-button maximize">□</button>
+          <button class="window-button close">X</button>
+        </div>
+      </div>
+      <div class="window-content">
+        <header class="main-header">
+          <div class="logo">
+            <a href="/">깔깔상자</a>
+          </div>
+          <nav class="main-nav">
+            <ul>
+              <li><a href="/">홈</a></li>
+              <li><a href="/search">검색</a></li>
+              {% if user %}
+              <li><a href="/video/upload">업로드</a></li>
+              <li><a href="/auth/profile">{{ user.nickname }}</a></li>
+              <li><a href="/auth/logout">로그아웃</a></li>
+              {% else %}
+              <li><a href="/auth/login">로그인</a></li>
+              <li><a href="/auth/register">회원가입</a></li>
+              {% endif %}
+            </ul>
+          </nav>
+        </header>
+
+        <main class="main-content">{% block content %}{% endblock %}</main>
+
+        <footer class="main-footer">
+          <p>&copy; 2025 깔깔상자 - 레트로 비디오 플랫폼</p>
+          <p class="visitor-counter">방문자 수: <span class="blink">12345</span></p>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>

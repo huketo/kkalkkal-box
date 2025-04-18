@@ -1,0 +1,92 @@
+{% extends "layouts/main.html" %} {% block content %}
+<div class="video-watch-container">
+  <div class="video-player-container">
+    <video class="video-player" controls poster="{{ video.thumbnailUrl }}">
+      <source src="{{ video.videoUrl }}" type="video/mp4" />
+      브라우저가 비디오 태그를 지원하지 않습니다.
+    </video>
+
+    <div class="video-info">
+      <h1 class="video-title">{{ video.title }}</h1>
+      <div class="video-meta">
+        <span>업로더: {{ video.user.nickname }}</span> • <span>조회수: {{ video.views }}</span> •
+        <span>업로드: {{ video.createdAt | date('YYYY-MM-DD') }}</span>
+      </div>
+
+      <div class="video-actions">
+        {% if user %}
+        <button
+          class="retro-button like-button"
+          hx-post="/video/{{ video.id }}/like"
+          hx-swap="outerHTML"
+          hx-trigger="click"
+        >
+          👍 좋아요 ({{ video.likes }})
+        </button>
+        {% else %}
+        <a href="/auth/login" class="retro-button">로그인하여 좋아요 누르기</a>
+        {% endif %}
+      </div>
+
+      {% if video.description %}
+      <div class="video-description">
+        <h3>설명</h3>
+        <p>{{ video.description }}</p>
+      </div>
+      {% endif %} {% if video.tags and video.tags.length > 0 %}
+      <div class="video-tags">
+        <h3>태그</h3>
+        <div class="tag-list">
+          {% for tag in video.tags %}
+          <a href="/search?query={{ tag }}" class="tag">{{ tag }}</a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="comment-section">
+    <h2>댓글 ({{ video.comments.length }})</h2>
+
+    {% if user %}
+    <div class="comment-form-container">
+      <form
+        hx-post="/video/{{ video.id }}/comment"
+        hx-target="#comment-list"
+        hx-swap="beforeend"
+        class="comment-form retro-form"
+      >
+        <div class="form-group">
+          <textarea
+            name="content"
+            placeholder="댓글을 남겨보세요..."
+            class="form-textarea"
+            required
+          ></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="form-button">댓글 작성</button>
+        </div>
+      </form>
+    </div>
+    {% else %}
+    <div class="comment-login-prompt">
+      <p><a href="/auth/login">로그인</a>하여 댓글을 남겨보세요.</p>
+    </div>
+    {% endif %}
+
+    <div id="comment-list" class="comment-list">
+      {% for comment in video.comments %}
+      <div class="comment-item">
+        <div class="comment-meta">
+          <span class="comment-author">{{ comment.authorName }}</span> •
+          <span class="comment-date">{{ comment.createdAt | date('YYYY-MM-DD HH:mm') }}</span>
+        </div>
+        <div class="comment-content">{{ comment.content }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "layouts/main.html" %} {% block content %}
+<div class="upload-container">
+  <h1>비디오 업로드</h1>
+
+  {% if error %}
+  <div class="error-message">
+    <p>{{ error }}</p>
+  </div>
+  {% endif %}
+
+  <div class="upload-info">
+    <p>모든 비디오는 레트로 스타일의 4:3 비율, 저화질로 자동 변환됩니다.</p>
+    <p>최대 업로드 파일 크기: 100MB</p>
+    <p>지원 형식: MP4, WEBM, MOV, AVI, WMV</p>
+  </div>
+
+  <form action="/video/upload" method="POST" enctype="multipart/form-data" class="retro-form">
+    <div class="form-group">
+      <label for="video" class="form-label">비디오 파일</label>
+      <input
+        type="file"
+        id="video"
+        name="video"
+        class="form-input"
+        accept="video/mp4,video/webm,video/mov,video/avi,video/wmv"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="title" class="form-label">제목</label>
+      <input
+        type="text"
+        id="title"
+        name="title"
+        class="form-input"
+        value="{{ formData.title }}"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="description" class="form-label">설명</label>
+      <textarea id="description" name="description" class="form-textarea">
+{{ formData.description }}</textarea
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="tags" class="form-label">태그</label>
+      <input
+        type="text"
+        id="tags"
+        name="tags"
+        class="form-input"
+        value="{{ formData.tags }}"
+        placeholder="쉼표로 구분하여 입력 (예: 레트로,음악,게임)"
+      />
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="form-button">업로드</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

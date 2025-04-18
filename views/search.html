@@ -1,0 +1,40 @@
+{% extends "layouts/main.html" %} {% block content %}
+<div class="search-results-container">
+  <h1>"{{ query }}" 검색 결과</h1>
+
+  <div class="search-section">
+    <form action="/search" method="GET" class="search-form">
+      <input type="text" name="query" class="search-input" value="{{ query }}" required />
+      <button type="submit" class="form-button">검색</button>
+    </form>
+  </div>
+
+  {% if videos and videos.length > 0 %}
+  <div class="search-results-count">
+    <p>총 {{ videos.length }}개의 결과가 있습니다.</p>
+  </div>
+
+  <div class="video-grid">
+    {% for video in videos %}
+    <a href="/video/{{ video.id }}" class="video-card">
+      {% if video.thumbnailPath %}
+      <img src="/api/thumbnail/{{ video.id }}" alt="{{ video.title }}" class="video-thumbnail" />
+      {% else %}
+      <div class="video-thumbnail"></div>
+      {% endif %}
+      <div class="video-title">{{ video.title }}</div>
+      <div class="video-meta">
+        <span>{{ video.user.nickname }}</span> • <span>조회수 {{ video.views }}</span> •
+        <span>{{ video.createdAt | date('YYYY-MM-DD') }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="no-results">
+    <p>"{{ query }}"에 대한 검색 결과가 없습니다.</p>
+    <p>다른 검색어로 다시 시도해보세요.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+services:
+  mongo:
+    env_file:
+      - .env
+    image: mongo:6
+    container_name: mongo
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/init-replica.js:/docker-entrypoint-initdb.d/init-replica.js:ro
+    command: ['--replSet', 'rs0', '--bind_ip_all']
+    restart: unless-stopped
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/admin --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  mongo-init:
+    container_name: mongo-init
+    env_file:
+      - .env
+    image: mongo:6
+    restart: 'no'
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./scripts/init-replica.js:/scripts/init-replica.js:ro
+    command: >
+      mongosh --host mongo:27017
+              --quiet
+              /scripts/init-replica.js
+
+  minio:
+    env_file:
+      - .env
+    image: minio/minio
+    container_name: minio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+  minio-init:
+    env_file:
+      - .env
+    image: minio/mc
+    container_name: minio-init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc mb myminio/${MINIO_BUCKET};
+      /usr/bin/mc policy set public myminio/${MINIO_BUCKET};
+      exit 0;
+      "
+
+volumes:
+  mongodb_data:
+  minio_data:

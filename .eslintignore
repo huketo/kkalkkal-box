@@ -1,0 +1,11 @@
+# 외부 라이브러리 파일
+public/js/htmx.min.js
+
+# MongoDB 초기화 스크립트
+scripts/init-replica.js
+
+# 빌드 산출물
+node_modules/
+.env*
+dist/
+coverage/
