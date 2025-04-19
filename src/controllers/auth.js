@@ -17,13 +17,23 @@ exports.getRegisterPage = (req, res) => {
  */
 exports.register = async (req, res, next) => {
   try {
-    const { username, password, nickname } = req.body;
+    const { username, password, confirmPassword, nickname } = req.body;
 
     // 필수 입력값 검증
-    if (!username || !password || !nickname) {
+    if (!username || !password || !confirmPassword || !nickname) {
       return res.status(400).render('auth/register', {
         title: '회원가입 - 깔깔상자',
         error: '모든 항목을 입력해주세요.',
+        username,
+        nickname,
+      });
+    }
+
+    // 비밀번호 일치 여부 확인
+    if (password !== confirmPassword) {
+      return res.status(400).render('auth/register', {
+        title: '회원가입 - 깔깔상자',
+        error: '비밀번호와 비밀번호 확인이 일치하지 않습니다.',
         username,
         nickname,
       });
