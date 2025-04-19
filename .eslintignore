@@ -9,3 +9,6 @@ node_modules/
 .env*
 dist/
 coverage/
+
+# Nunjucks 템플릿 파일 무시
+views/**/*.html

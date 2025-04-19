@@ -1,1 +1,4 @@
 .env*
+
+# Nunjucks 템플릿 파일
+views/**/*.html

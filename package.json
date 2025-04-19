@@ -2,6 +2,9 @@
   "name": "kkalkkal-box",
   "version": "0.1.0",
   "main": "src/server.js",
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
@@ -55,7 +58,7 @@
       "eslint --fix",
       "prettier --write"
     ],
-    "*.{json,md,html}": [
+    "*.{json,md}": [
       "prettier --write"
     ]
   }
