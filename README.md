@@ -79,7 +79,7 @@
 
 - **Node.js** & **Express** - 서버 프레임워크
 - **MongoDB** - 데이터베이스
-- **Prisma** - ORM(Object-Relational Mapping)
+- **Mongoose** - MongoDB ODM(Object Document Mapper)
 - **JWT** - 인증 구현
 - **Nunjucks** - 템플릿 엔진
 
@@ -125,12 +125,6 @@ cp .env.example .env
 
 `.env` 파일을 열어 필요한 환경 변수를 설정합니다. MinIO와 MongoDB의 연결 정보를 포함해야 합니다.
 
-4. Prisma 설정
-
-```bash
-npm run prisma:generate
-```
-
 ## 실행 방법
 
 ### 개발 모드로 실행
@@ -155,8 +149,6 @@ docker compose up -d
 
 ```bash
 docker compose -f docker-compose-dev.yml up -d
-npx prisma db push
-npx prisma generate
 npm run dev
 ```
 
@@ -177,7 +169,6 @@ npm run format    # 코드 포맷팅
 ```
 .
 ├── docs/               # 문서
-├── prisma/             # Prisma 스키마 및 마이그레이션
 ├── public/             # 정적 파일
 │   ├── css/            # 스타일시트
 │   ├── images/         # 이미지

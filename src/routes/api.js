@@ -1,10 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
+const VideoModel = require('../models/video');
 const Minio = require('minio');
 const logger = require('../utils/logger');
-
-const prisma = new PrismaClient();
 
 // Minio 클라이언트 설정
 const minioClient = new Minio.Client({
@@ -21,10 +19,7 @@ router.get('/thumbnail/:id', async (req, res, next) => {
     const { id } = req.params;
     logger.debug({ videoId: id, userId: req.user?.id }, '썸네일 요청');
 
-    const video = await prisma.video.findUnique({
-      where: { id },
-      select: { thumbnailPath: true },
-    });
+    const video = await VideoModel.findById(id);
 
     if (!video || !video.thumbnailPath) {
       logger.warn({ videoId: id, userId: req.user?.id }, '존재하지 않는 썸네일 요청');
@@ -59,10 +54,7 @@ router.get('/video/:id', async (req, res, next) => {
     const { id } = req.params;
     logger.debug({ videoId: id, userId: req.user?.id }, '비디오 스트리밍 요청');
 
-    const video = await prisma.video.findUnique({
-      where: { id },
-      select: { filePath: true },
-    });
+    const video = await VideoModel.findById(id);
 
     if (!video || !video.filePath) {
       logger.warn({ videoId: id, userId: req.user?.id }, '존재하지 않는 비디오 스트리밍 요청');

@@ -1,5 +1,89 @@
-const prisma = require('../utils/prisma');
+const mongoose = require('../utils/mongoose');
 const logger = require('../utils/logger');
+
+const commentSchema = new mongoose.Schema(
+  {
+    content: {
+      type: String,
+      required: true,
+    },
+    videoId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Video',
+      required: true,
+    },
+    authorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+    authorName: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const Comment = mongoose.model('Comment', commentSchema);
+
+const videoSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    filePath: {
+      type: String,
+      required: true,
+    },
+    thumbnailPath: {
+      type: String,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    likes: {
+      type: Number,
+      default: 0,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
+
+// 가상 필드 설정
+videoSchema.virtual('comments', {
+  ref: 'Comment',
+  localField: '_id',
+  foreignField: 'videoId',
+});
+
+videoSchema.virtual('user', {
+  ref: 'User',
+  localField: 'userId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+const Video = mongoose.model('Video', videoSchema);
 
 class VideoModel {
   /**
@@ -9,19 +93,7 @@ class VideoModel {
    */
   async findLatest(limit = 12) {
     try {
-      return await prisma.video.findMany({
-        orderBy: {
-          createdAt: 'desc',
-        },
-        include: {
-          user: {
-            select: {
-              nickname: true,
-            },
-          },
-        },
-        take: limit,
-      });
+      return await Video.find().sort({ createdAt: -1 }).populate('user', 'nickname').limit(limit);
     } catch (error) {
       logger.error({ err: error }, 'VideoModel.findLatest 오류 발생');
       throw error;
@@ -35,25 +107,15 @@ class VideoModel {
    */
   async search(query) {
     try {
-      return await prisma.video.findMany({
-        where: {
-          OR: [
-            { title: { contains: query, mode: 'insensitive' } },
-            { description: { contains: query, mode: 'insensitive' } },
-            { tags: { has: query } },
-          ],
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        include: {
-          user: {
-            select: {
-              nickname: true,
-            },
-          },
-        },
-      });
+      return await Video.find({
+        $or: [
+          { title: { $regex: query, $options: 'i' } },
+          { description: { $regex: query, $options: 'i' } },
+          { tags: query },
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .populate('user', 'nickname');
     } catch (error) {
       logger.error({ err: error, query }, 'VideoModel.search 오류 발생');
       throw error;
@@ -71,22 +133,12 @@ class VideoModel {
     }
 
     try {
-      return await prisma.video.findUnique({
-        where: { id },
-        include: {
-          user: {
-            select: {
-              id: true,
-              nickname: true,
-            },
-          },
-          comments: {
-            orderBy: {
-              createdAt: 'desc',
-            },
-          },
-        },
-      });
+      return await Video.findById(id)
+        .populate('user', 'id nickname')
+        .populate({
+          path: 'comments',
+          options: { sort: { createdAt: -1 } },
+        });
     } catch (error) {
       logger.error({ err: error, videoId: id }, 'VideoModel.findById 오류 발생');
       throw error;
@@ -100,11 +152,25 @@ class VideoModel {
    */
   async create(videoData) {
     try {
-      return await prisma.video.create({
-        data: videoData,
-      });
+      const video = new Video(videoData);
+      return await video.save();
     } catch (error) {
       logger.error({ err: error }, 'VideoModel.create 오류 발생');
+      throw error;
+    }
+  }
+
+  /**
+   * 코멘트 생성
+   * @param {object} commentData
+   * @returns {Promise<object>}
+   */
+  async createComment(commentData) {
+    try {
+      const comment = new Comment(commentData);
+      return await comment.save();
+    } catch (error) {
+      logger.error({ err: error }, 'VideoModel.createComment 오류 발생');
       throw error;
     }
   }

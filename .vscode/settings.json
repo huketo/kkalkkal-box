@@ -1,3 +1,21 @@
 {
-  "cSpell.words": ["kkalkkal"]
+  "cSpell.words": ["kkalkkal"],
+  "dbcode.connections": [
+    {
+      "connectionId": "CrIgHDO2dXTLXp1ciokpz",
+      "name": "DATABASE_URL (.env)",
+      "driver": "mongodb",
+      "connectionType": "host",
+      "driverOptions": {
+        "protocol": "mongodb://"
+      },
+      "host": "localhost",
+      "port": 27017,
+      "ssl": false,
+      "savePassword": "secretStorage",
+      "database": "kkalkkal-box",
+      "readOnly": false,
+      "connectionTimeout": 30
+    }
+  ]
 }

@@ -37,8 +37,6 @@ services:
       - '27017:27017'
     volumes:
       - mongodb_data:/data/db
-      - ./scripts/init-replica.js:/docker-entrypoint-initdb.d/init-replica.js:ro
-    command: ['--replSet', 'rs0', '--bind_ip_all']
     restart: unless-stopped
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/admin --quiet
@@ -46,22 +44,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
-
-  mongo-init:
-    env_file:
-      - .env
-    image: mongo:6
-    container_name: mongo-init
-    restart: 'no'
-    depends_on:
-      mongo:
-        condition: service_healthy
-    volumes:
-      - ./scripts/init-replica.js:/scripts/init-replica.js:ro
-    command: >
-      mongosh --host mongo:27017
-              --quiet
-              /scripts/init-replica.js
 
   minio:
     env_file:

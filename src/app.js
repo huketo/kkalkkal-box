@@ -11,6 +11,10 @@ const dayjs = require('dayjs');
 logger.info('환경 설정 파일 로드: .env');
 dotenv.config();
 
+// MongoDB 연결 (Mongoose 사용)
+require('./utils/mongoose');
+logger.info('MongoDB 연결 설정 완료');
+
 // 라우터 가져오기
 const indexRouter = require('./routes');
 const authRouter = require('./routes/auth');
