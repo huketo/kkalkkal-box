@@ -18,7 +18,21 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    // 원본 파일명을 안전하게 처리
+    let originalname = file.originalname;
+
+    // 파일명 디코딩 시도 (URL 인코딩된 경우)
+    try {
+      originalname = decodeURIComponent(originalname);
+    } catch (err) {
+      // 디코딩 실패 시 원본 사용
+    }
+
+    // 안전한 이름으로 변환 (한글, 일본어, 중국어 등 멀티바이트 문자 지원)
+    const timestamp = Date.now();
+    const safeName = Buffer.from(originalname, 'utf8').toString('utf8');
+
+    cb(null, `${timestamp}-${safeName}`);
   },
 });
 
@@ -48,6 +62,21 @@ router.get('/upload', videoController.getUploadPage);
 
 // 비디오 업로드 처리
 router.post('/upload', upload.single('video'), videoController.uploadVideo);
+
+// 비디오 수정 페이지
+router.get('/:id/edit', videoController.getEditPage);
+
+// 비디오 수정 처리
+router.post('/:id/edit', videoController.updateVideo);
+
+// 비디오 삭제 페이지
+router.get('/:id/delete', videoController.getDeletePage);
+
+// 비디오 삭제 처리
+router.post('/:id/delete', videoController.deleteVideo);
+
+// 비디오 인코딩 진행상태 확인 API
+router.get('/:id/progress', videoController.getVideoProgress);
 
 // 비디오 시청 페이지
 router.get('/:id', videoController.getVideoPage);

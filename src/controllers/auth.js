@@ -125,11 +125,14 @@ exports.login = async (req, res, next) => {
       { expiresIn: '1d' }
     );
 
-    // 쿠키에 토큰 저장
+    // 쿠키에 토큰 저장 (보안 강화)
     res.cookie('token', token, {
-      httpOnly: true,
+      httpOnly: true, // JavaScript에서 쿠키 접근 방지
+      secure: process.env.NODE_ENV === 'production', // HTTPS에서만 쿠키 전송
+      sameSite: 'strict', // CSRF 공격 방지
       maxAge: 24 * 60 * 60 * 1000, // 1일
       signed: true,
+      path: '/', // 모든 경로에서 쿠키 접근 가능
     });
 
     // 메인 페이지로 리다이렉트

@@ -1,0 +1,282 @@
+{% extends "layouts/main.html" %} {% block content %}
+<div class="video-edit-container">
+  <h1>비디오 수정</h1>
+
+  {% if error %}
+  <div class="error-message">{{ error }}</div>
+  {% endif %}
+
+  <form class="upload-form retro-form" method="POST" action="/video/{{ video._id }}/edit">
+    <div class="form-group">
+      <label for="title">제목</label>
+      <input type="text" id="title" name="title" value="{{ video.title }}" required />
+    </div>
+
+    <div class="form-group">
+      <label for="description">설명</label>
+      <textarea id="description" name="description" rows="6" required>{{ video.description }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="tags">태그 (쉼표로 구분)</label>
+      <input type="text" id="tags" name="tags" value="{{ tagString }}" placeholder="재미있는, 게임, 음악" />
+    </div>
+
+    {% if video.conversionStatus == 'processing' %}
+    <div class="processing-status">
+      <h3>비디오 인코딩 상태</h3>
+      <div id="progress-container"
+           data-progress="{{ progressInfo.progress | default(0) }}"
+           data-message="{{ progressInfo.message | default('레트로 감성의 깔깔상자 스타일로 동영상을 변환 중입니다.') }}"
+           data-has-info="{% if progressInfo is defined and progressInfo %}true{% else %}false{% endif %}">
+        <div class="progress-bar-outer">
+          <div id="progress-bar" class="progress-bar-inner"></div>
+        </div>
+        <p id="progress-percentage">0%</p>
+      </div>
+      <p id="progress-status-message">레트로 감성의 깔깔상자 스타일로 동영상을 변환 중입니다.</p>
+      <p id="queue-status-message" class="queue-message">
+        {% if progressInfo.status == 'queued' %}
+        <span>대기 중: 앞에 {{progressInfo.queuePosition}}개의 동영상이 있습니다.</span>
+        {% endif %}
+      </p>
+      <div id="error-message" class="error-message" style="display: none;"></div>
+    </div>
+    {% endif %}
+
+    <div class="form-actions">
+      <a href="/video/{{ video._id }}" class="retro-button cancel-button">취소</a>
+      <button type="submit" class="retro-button submit-button">저장</button>
+    </div>
+  </form>
+</div>
+
+<style>
+  .video-edit-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background-color: #f0f0f0;
+    border: 2px solid #333;
+    box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.3);
+  }
+
+  .error-message {
+    background-color: #ffe3e3;
+    border: 1px solid #ff8787;
+    color: #c92a2a;
+    padding: 10px;
+    margin: 15px 0;
+    border-radius: 3px;
+  }
+
+  .retro-form {
+    margin-top: 1.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.2rem;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.7rem;
+    font-size: 1rem;
+    border: 2px solid #333;
+    background-color: #ffffff;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+  }
+
+  .retro-button {
+    padding: 0.7rem 1.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border: 2px solid #333;
+    background-color: #e0e0e0;
+    box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    text-decoration: none;
+    color: #333;
+    display: inline-block;
+  }
+
+  .retro-button:hover {
+    background-color: #d0d0d0;
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
+  }
+
+  .submit-button {
+    background-color: #a5d8ff;
+  }
+
+  .cancel-button {
+    background-color: #ced4da;
+  }
+
+  /* 처리 상태 스타일 */
+  .processing-status {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background-color: #e0e0e0;
+    border: 1px dashed #999;
+  }
+
+  /* 진행 표시줄 스타일 */
+  .progress-bar-outer {
+    width: 100%;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 3px;
+    margin: 10px 0;
+    border: 1px solid #999;
+    overflow: hidden;
+  }
+
+  .progress-bar-inner {
+    width: 0%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      45deg,
+      #74c0fc,
+      #74c0fc 10px,
+      #4dabf7 10px,
+      #4dabf7 20px
+    );
+    transition: width 0.3s ease;
+  }
+
+  #progress-percentage {
+    font-weight: bold;
+    color: #333;
+    margin: 5px 0;
+  }
+
+  .queue-message {
+    padding: 5px 10px;
+    background-color: #ffd43b;
+    border-radius: 3px;
+    display: inline-block;
+    font-weight: bold;
+  }
+</style>
+
+<script>
+  // 비디오 ID 가져오기
+  const videoId = "{{ video._id }}";
+  let pollingInterval;
+
+  // 진행 상태 업데이트 함수
+  async function updateProgress() {
+    try {
+      const response = await fetch(`/video/${videoId}/progress`);
+
+      // HTTP 상태 코드 체크
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '서버 오류가 발생했습니다');
+      }
+
+      // 에러 메시지 숨김
+      const errorMessageElement = document.getElementById('error-message');
+      if (errorMessageElement) {
+        errorMessageElement.style.display = 'none';
+      }
+
+      const progressData = await response.json();
+
+      // 진행률 업데이트
+      const progressBar = document.getElementById('progress-bar');
+      const progressPercentage = document.getElementById('progress-percentage');
+      const progressMessage = document.getElementById('progress-status-message');
+      const queueStatusMessage = document.getElementById('queue-status-message');
+
+      // 진행바 업데이트
+      const progress = progressData.progress || 0;
+      progressBar.style.width = `${progress}%`;
+      progressPercentage.textContent = `${progress}%`;
+
+      // 상태 메시지 업데이트
+      if (progressData.message) {
+        progressMessage.textContent = progressData.message;
+      }
+
+      // 대기열 상태 업데이트
+      if (progressData.status === 'queued') {
+        queueStatusMessage.innerHTML = `<span>대기 중: 앞에 ${progressData.queuePosition}개의 동영상이 있습니다.</span>`;
+        queueStatusMessage.style.display = 'block';
+      } else {
+        queueStatusMessage.style.display = 'none';
+      }
+
+      // 완료 또는 실패 처리
+      if (progressData.status === 'completed') {
+        clearInterval(pollingInterval);
+
+        // 페이지 새로고침 (이미 편집 페이지에 있으므로 redirectUrl은 사용하지 않음)
+        if (document.querySelector('.processing-status')) {
+          document.querySelector('.processing-status').innerHTML = '<p>인코딩 완료! 모든 해상도로 시청 가능합니다.</p>';
+        }
+      } else if (progressData.status === 'failed') {
+        clearInterval(pollingInterval);
+        progressMessage.textContent = '처리 중 오류가 발생했습니다. 다시 시도해 주세요.';
+        progressMessage.style.color = 'red';
+      }
+
+    } catch (error) {
+      console.error('진행 상태 업데이트 중 오류 발생:', error);
+
+      // 오류 메시지 표시
+      const errorMessageElement = document.getElementById('error-message');
+      if (errorMessageElement) {
+        errorMessageElement.textContent = error.message || '진행 상태를 가져오는 중 오류가 발생했습니다.';
+        errorMessageElement.style.display = 'block';
+      }
+    }
+  }
+
+  // 페이지 로드 시 초기 진행 상태 설정
+  document.addEventListener('DOMContentLoaded', function() {
+    // 서버에서 전달된 초기 상태값을 data 속성에서 가져오기
+    const progressContainer = document.getElementById('progress-container');
+    if (!progressContainer) return; // 처리 중이 아니면 종료
+
+    const initialProgress = progressContainer.dataset.progress || 0;
+    const initialMessage = progressContainer.dataset.message || '레트로 감성의 깔깔상자 스타일로 동영상을 변환 중입니다.';
+    const hasProgressInfo = progressContainer.dataset.hasInfo === 'true';
+
+    // 이미 전달된 초기 상태가 있으면 설정
+    if (hasProgressInfo) {
+      const progressBar = document.getElementById('progress-bar');
+      const progressPercentage = document.getElementById('progress-percentage');
+
+      progressBar.style.width = `${initialProgress}%`;
+      progressPercentage.textContent = `${initialProgress}%`;
+
+      if (initialMessage) {
+        document.getElementById('progress-status-message').textContent = initialMessage;
+      }
+    }
+
+    // 2초마다 진행 상태 확인
+    pollingInterval = setInterval(updateProgress, 2000);
+
+    // 페이지를 떠날 때 인터벌 정리
+    window.addEventListener('beforeunload', function() {
+      clearInterval(pollingInterval);
+    });
+  });
+</script>
+{% endblock %}

@@ -1,15 +1,41 @@
 {% extends "layouts/main.html" %} {% block content %}
 <div class="video-watch-container">
   <div class="video-player-container">
+    {% if video.conversionStatus == 'processing' %}
+    <div class="video-processing-message">
+      <p>더 많은 화질 옵션이 준비 중입니다. 현재 가능한 화질로 시청하실 수 있습니다.</p>
+    </div>
+    {% endif %}
+
     <video class="video-player" controls poster="{{ video.thumbnailUrl }}">
-      <source src="{{ video.videoUrl }}" type="video/mp4" />
+      <source
+        src="{{ video.videoUrl }}"
+        type="{% if video.selectedFormat %}video/webm{% else %}video/mp4{% endif %}"
+      />
       브라우저가 비디오 태그를 지원하지 않습니다.
     </video>
+
+    {% if video.formats and video.formats.length > 0 %}
+    <div class="video-quality-selector">
+      <span>화질: </span>
+      <select id="quality-selector" onchange="changeVideoQuality(this.value)">
+        {% for format in video.formats %}
+        <option
+          value="{{ format.filePath }}"
+          {% if video.selectedFormat and video.selectedFormat.resolution == format.resolution %}selected{% endif %}
+        >
+          {{ format.resolution }} ({{ format.bitrate }})
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
 
     <div class="video-info">
       <h1 class="video-title">{{ video.title }}</h1>
       <div class="video-meta">
-        <span>업로더: {{ video.user.nickname }}</span> • <span>조회수: {{ video.views }}</span> •
+        <span>업로더: {{ video.user.nickname }}</span> •
+        <span>조회수: {{ video.viewCount }}</span> •
         <span>업로드: {{ video.createdAt | date('YYYY-MM-DD') }}</span>
       </div>
 
@@ -21,8 +47,14 @@
           hx-swap="outerHTML"
           hx-trigger="click"
         >
-          👍 좋아요 ({{ video.likes }})
+          👍 좋아요 ({{ video.likeCount }})
         </button>
+
+        {% if user.id === video.userId.toString() %}
+        <a href="/video/{{ video.id }}/edit" class="retro-button edit-button">✏️ 수정</a>
+        <a href="/video/{{ video.id }}/delete" class="retro-button delete-button">🗑️ 삭제</a>
+        {% endif %}
+
         {% else %}
         <a href="/auth/login" class="retro-button">로그인하여 좋아요 누르기</a>
         {% endif %}
@@ -89,4 +121,47 @@
     </div>
   </div>
 </div>
+
+<style>
+  .video-processing-message {
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background-color: #f0f0f0;
+    border: 1px dashed #999;
+    border-radius: 3px;
+  }
+
+  .video-processing-message p {
+    margin: 0;
+    font-size: 0.9em;
+    color: #666;
+  }
+</style>
+
+<script>
+  function changeVideoQuality(filePath) {
+    const video = document.querySelector('.video-player');
+    const currentTime = video.currentTime;
+    const isPaused = video.paused;
+
+    // 현재 source 태그 삭제 및 새로운 태그 생성
+    while (video.firstChild) {
+      video.removeChild(video.firstChild);
+    }
+
+    const source = document.createElement('source');
+    source.src = `/api/video/stream?path=${encodeURIComponent(filePath)}`;
+    source.type = 'video/webm';
+    video.appendChild(source);
+
+    // 로드 후 이전 재생 시간 및 상태 복원
+    video.load();
+    video.onloadedmetadata = function () {
+      video.currentTime = currentTime;
+      if (!isPaused) {
+        video.play();
+      }
+    };
+  }
+</script>
 {% endblock %}

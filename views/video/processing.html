@@ -1,0 +1,314 @@
+{% extends "layouts/main.html" %} {% block content %}
+<div class="video-processing-container">
+  <div class="processing-info">
+    <h1 class="video-title">{{ video.title }}</h1>
+
+    <div class="processing-status">
+      <div class="processing-icon">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="spinning"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+
+      <div class="processing-message">
+        <h2>비디오 변환 중...</h2>
+        <div id="progress-container"
+             data-progress="{{ progressInfo.progress | default(0) }}"
+             data-message="{{ progressInfo.message | default('레트로 감성의 깔깔상자 스타일로 동영상을 변환 중입니다.') }}"
+             data-has-info="{% if progressInfo is defined and progressInfo %}true{% else %}false{% endif %}">
+          <div class="progress-bar-outer">
+            <div id="progress-bar" class="progress-bar-inner"></div>
+          </div>
+          <p id="progress-percentage">0%</p>
+        </div>
+        <p id="progress-status-message">레트로 감성의 깔깔상자 스타일로 동영상을 변환 중입니다.</p>
+        <p id="queue-status-message" class="queue-message">
+          {% if progressInfo.status == 'queued' %}
+          <span>대기 중: 앞에 {{progressInfo.queuePosition}}개의 동영상이 있습니다.</span>
+          {% endif %}
+        </p>
+        <p class="upload-time">업로드: {{ video.createdAt | date('YYYY-MM-DD HH:mm') }}</p>
+      </div>
+    </div>
+
+    {% if video.description %}
+    <div class="video-description">
+      <h3>설명</h3>
+      <p>{{ video.description }}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .video-processing-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background-color: #f0f0f0;
+    border: 2px solid #333;
+    box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.3);
+  }
+
+  .processing-status {
+    display: flex;
+    align-items: center;
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background-color: #e0e0e0;
+    border: 1px dashed #999;
+  }
+
+  .processing-icon {
+    margin-right: 1.5rem;
+  }
+
+  .spinning {
+    animation: spin 2s linear infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .processing-message h2 {
+    margin-top: 0;
+    color: #333;
+  }
+
+  .upload-time {
+    margin-top: 1rem;
+    font-style: italic;
+    color: #666;
+  }
+
+  /* 진행 표시줄 스타일 */
+  .progress-bar-outer {
+    width: 100%;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 3px;
+    margin: 10px 0;
+    border: 1px solid #999;
+    overflow: hidden;
+  }
+
+  .progress-bar-inner {
+    width: 0%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      45deg,
+      #ff6b6b,
+      #ff6b6b 10px,
+      #f03e3e 10px,
+      #f03e3e 20px
+    );
+    transition: width 0.3s ease;
+  }
+
+  #progress-percentage {
+    font-weight: bold;
+    color: #333;
+    margin: 5px 0;
+  }
+
+  #progress-status-message {
+    margin-bottom: 10px;
+  }
+
+  .queue-message {
+    padding: 5px 10px;
+    background-color: #ffd43b;
+    border-radius: 3px;
+    display: inline-block;
+    font-weight: bold;
+  }
+
+  .resolution-step {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    font-size: 0.9em;
+    margin-right: 5px;
+  }
+
+  .step-completed {
+    background-color: #8ce99a;
+    border-color: #69db7c;
+  }
+
+  .step-active {
+    background-color: #4dabf7;
+    border-color: #339af0;
+    color: white;
+  }
+
+  .error-message {
+    background-color: #ffe3e3;
+    border: 1px solid #ff8787;
+    color: #c92a2a;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 3px;
+    display: none;
+  }
+</style>
+
+<script>
+  // 비디오 ID 가져오기
+  const videoId = "{{ video.id }}";
+  let pollingInterval;
+  let authErrorCount = 0; // 인증 오류 횟수 추적
+
+  // 진행 상태 업데이트 함수
+  async function updateProgress() {
+    try {
+      const response = await fetch(`/api/video/progress/${videoId}`);
+
+      // HTTP 상태 코드 체크
+      if (!response.ok) {
+        const errorData = await response.json();
+
+        // 인증 오류(403) 처리
+        if (response.status === 403) {
+          authErrorCount++;
+
+          // 인증 오류가 연속해서 발생하면 (3회 이상) 페이지 새로고침 또는 로그인 페이지로 리디렉션
+          if (authErrorCount >= 3) {
+            if (errorData.needsAuth) {
+              // 로그인이 필요한 경우 로그인 페이지로 리디렉션
+              clearInterval(pollingInterval);
+              window.location.href = `/auth/login?redirect=/video/${videoId}`;
+              return;
+            } else {
+              // 다른 권한 문제일 경우, 메인 페이지로 리디렉션
+              clearInterval(pollingInterval);
+              window.location.href = '/';
+              return;
+            }
+          }
+
+          // 오류 메시지 표시
+          const errorMessageElement = document.getElementById('error-message');
+          if (errorMessageElement) {
+            errorMessageElement.textContent = errorData.error || '인증 오류가 발생했습니다.';
+            errorMessageElement.style.display = 'block';
+          }
+
+          return; // 추가 처리 중단
+        }
+
+        throw new Error(errorData.error || '서버 오류가 발생했습니다');
+      }
+
+      // 응답이 정상이면 인증 오류 카운터 초기화
+      authErrorCount = 0;
+
+      // 에러 메시지 숨김
+      const errorMessageElement = document.getElementById('error-message');
+      if (errorMessageElement) {
+        errorMessageElement.style.display = 'none';
+      }
+
+      const progressData = await response.json();
+
+      // 진행률 업데이트
+      const progressBar = document.getElementById('progress-bar');
+      const progressPercentage = document.getElementById('progress-percentage');
+      const progressMessage = document.getElementById('progress-status-message');
+      const queueStatusMessage = document.getElementById('queue-status-message');
+
+      // 진행바 업데이트
+      const progress = progressData.progress || 0;
+      progressBar.style.width = `${progress}%`;
+      progressPercentage.textContent = `${progress}%`;
+
+      // 상태 메시지 업데이트
+      if (progressData.message) {
+        progressMessage.textContent = progressData.message;
+      }
+
+      // 대기열 상태 업데이트
+      if (progressData.status === 'queued') {
+        queueStatusMessage.innerHTML = `<span>대기 중: 앞에 ${progressData.queuePosition}개의 동영상이 있습니다.</span>`;
+        queueStatusMessage.style.display = 'block';
+      } else {
+        queueStatusMessage.style.display = 'none';
+      }
+
+      // 완료 또는 실패 처리
+      if (progressData.status === 'completed' && progressData.redirectUrl) {
+        clearInterval(pollingInterval);
+        window.location.href = progressData.redirectUrl;
+      } else if (progressData.status === 'failed') {
+        clearInterval(pollingInterval);
+        progressMessage.textContent = '처리 중 오류가 발생했습니다. 다시 시도해 주세요.';
+        progressMessage.style.color = 'red';
+      }
+
+    } catch (error) {
+      console.error('진행 상태 업데이트 중 오류 발생:', error);
+    }
+  }
+
+  // 페이지 로드 시 초기 진행 상태 설정
+  document.addEventListener('DOMContentLoaded', function() {
+    // 에러 메시지 요소 추가
+    const processingStatus = document.querySelector('.processing-message');
+    if (processingStatus) {
+      const errorElement = document.createElement('div');
+      errorElement.id = 'error-message';
+      errorElement.className = 'error-message';
+      errorElement.textContent = '인증 정보를 확인 중입니다...';
+      errorElement.style.display = 'none';
+      processingStatus.appendChild(errorElement);
+    }
+
+    // 서버에서 전달된 초기 상태값을 data 속성에서 가져오기
+    const progressContainer = document.getElementById('progress-container');
+    const initialProgress = progressContainer.dataset.progress || 0;
+    const initialMessage = progressContainer.dataset.message || '레트로 감성의 깔깔상자 스타일로 동영상을 변환 중입니다.';
+    const hasProgressInfo = progressContainer.dataset.hasInfo === 'true';
+
+    // 이미 전달된 초기 상태가 있으면 설정
+    if (hasProgressInfo) {
+      const progressBar = document.getElementById('progress-bar');
+      const progressPercentage = document.getElementById('progress-percentage');
+
+      progressBar.style.width = `${initialProgress}%`;
+      progressPercentage.textContent = `${initialProgress}%`;
+
+      if (initialMessage) {
+        document.getElementById('progress-status-message').textContent = initialMessage;
+      }
+    }
+
+    // 2초마다 진행 상태 확인
+    pollingInterval = setInterval(updateProgress, 2000);
+
+    // 페이지를 떠날 때 인터벌 정리
+    window.addEventListener('beforeunload', function() {
+      clearInterval(pollingInterval);
+    });
+  });
+</script>
+{% endblock %}

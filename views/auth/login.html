@@ -27,7 +27,16 @@
 
     <div class="form-group">
       <label for="password" class="form-label">비밀번호</label>
-      <input type="password" id="password" name="password" class="form-input" required />
+      <input
+        type="password"
+        id="password"
+        name="password"
+        class="form-input"
+        pattern="[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':&quot;,.<>/?]+"
+        title="영문, 숫자, 특수문자만 입력 가능합니다"
+        oninput="validatePassword(this)"
+        required
+      />
     </div>
 
     <div class="form-actions">
@@ -39,4 +48,16 @@
     </div>
   </form>
 </div>
+
+<script>
+  function validatePassword(input) {
+    // 영문, 숫자, 특수문자만 허용하는 정규식
+    const regex = /[^A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]/g;
+
+    // 입력된 값에서 허용되지 않는 문자 제거
+    if(regex.test(input.value)) {
+      input.value = input.value.replace(regex, '');
+    }
+  }
+</script>
 {% endblock %}
